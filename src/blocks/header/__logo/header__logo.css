@@ -9,12 +9,11 @@
 
 @media screen and (max-width: 760px) {
     .header__logo {
-        margin-left: 27px;
+        margin-left: 30px;
     }
 }
 
 @media screen and (max-width: 568px) {
-    /* мобильные устройства */
     .header__logo {
         max-width: 103.74px;
         max-height: 24.4px;

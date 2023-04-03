@@ -16,57 +16,83 @@ import ImagePopup from "./ImagePopup";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 import ConfirmPopup from "./ConfirmPopup";
 import * as auth from "../utils/Auth";
+import SuccessImgSrc from "../images/Info_Success.svg";
+import FailImgSrc from "../images/Info_Fail.svg";
 
 function App() {
+  // хук навигации
   const navigate = useNavigate();
-
+  // состояние авторизации пользователя
   const [loggedIn, setLoggedIn] = useState(false);
+  // состояние успешности регистрации
   const [isSuccessReg, setIsSuccessReg] = useState(false);
+  // состояние успешности входа
+  const [isSuccessLogin, setIsSuccessLogin] = useState(false);
+  // email для отображения в хедере
   const [userEmail, setUserEmail] = useState("");
+  // состояние отображения попапов
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
   const [isConfirmPopupOpen, setIsConfirmPopupOpen] = useState(false);
   const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
+  // массив карточек для отображения на странице
   const [cards, setCards] = useState([]);
+  // выбранная карточка на данный момент
   const [selectedCard, setSelectedCard] = useState(null);
+  // карточка, которую нужно удалить 
   const [deletedCard, setDeletedCard] = useState(null);
+  // текущий пользователь
   const [currentUser, setCurrentUser] = useState({});
+  // тексты на сабмит-кнопках попапов
   const [editSubmitTitle, setEditSubmitTitle] = useState("Сохранить");
   const [avatarSubmitTitle, setAvatarSubmitTitle] = useState("Обновить");
   const [addSubmitTitle, setAddSubmitTitle] = useState("Добавить");
+  // текст и картинка для отображения в инфо-попапе при входе и регистрации
+  const [infoTitle, setInfoTitle] = useState("");
+  const [infoImg, setInfoImg] = useState(null);
 
+  // проверка токена каждый раз, когда пользователь открывает страницу
   useEffect(() => {
     checkToken();
   }, []);
 
+  // загрузка карточек и профиля пользователя
   useEffect(() => {
-    Promise.all([api.getUserData(), api.getInitialCards()])
-      .then(([resUser, resCards]) => {
-        setCurrentUser(resUser);
-        setCards(resCards);
-      })
-      .catch(() => {
-        console.log(`Ошибка при загрузке данных пользователя и карточек.`);
-      });
-  }, []);
+    if (loggedIn) {
+      Promise.all([api.getUserData(), api.getInitialCards()])
+        .then(([resUser, resCards]) => {
+          setCurrentUser(resUser);
+          setCards(resCards);
+        })
+        .catch(() => {
+          console.log(`Ошибка при загрузке данных пользователя и карточек.`);
+        });
+    }
+  }, [loggedIn]);
 
+  // регистрация пользователя в системе
   function handleRegistration(email, password) {
     auth.registerUser(email, password)
       .then((res) => {
         if (res) {
-          setIsSuccessReg(true);
+          // setIsSuccessReg(true);
+          setInfoTitle("Вы успешно зарегестрировались!");
+          setInfoImg(SuccessImgSrc);
           navigate('/sign-in', { replace: true });
         }
       })
       .catch(() => {
-        setIsSuccessReg(false);
+        setInfoTitle("Что-то пошло не так! Попробуйте ещё раз.");
+        setInfoImg(FailImgSrc);
+        // setIsSuccessReg(false);
       })
       .finally(() => {
         setIsInfoPopupOpen(true);
       });
   }
 
+  // авторизация пользователя
   function handleLogin(email, password) {
     auth.loginUser(email, password)
       .then((data) => {
@@ -77,29 +103,38 @@ function App() {
         }
       })
       .catch(() => {
+        setInfoTitle("Не получилось войти! Попробуйте ещё раз.");
+        setInfoImg(FailImgSrc);
+        setIsInfoPopupOpen(true);
         console.log(`Ошибка при входе в систему`);
       });
   }
 
+  // выход пользователя из системы
   function handleLogout() {
     setLoggedIn(false);
     localStorage.removeItem('token');
     navigate('/sign-in', { replace: true });
   }
 
+  // проверка токена
   function checkToken() {
-    if (localStorage.getItem('token')) {
-      const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    if (token) {
       auth.getContent(token).then((res) => {
         if (res) {
           setUserEmail(res.data.email);
           setLoggedIn(true);
           navigate("/", { replace: true })
         }
-      });
+      })
+        .catch(() => {
+          console.log(`Ошибка при проверке токена`);
+        });
     }
   }
 
+  // функции для открытия попапов
   function handleEditAvatarClick() {
     setIsEditAvatarPopupOpen(true);
   }
@@ -117,6 +152,7 @@ function App() {
     setDeletedCard(card);
   }
 
+  // закрытие попапов
   function closeAllPopups() {
     setIsEditAvatarPopupOpen(false);
     setIsEditProfilePopupOpen(false);
@@ -126,10 +162,12 @@ function App() {
     setSelectedCard(null);
   }
 
+  // выбор текущей карточки
   function handleCardClick(card) {
     setSelectedCard(card);
   }
 
+  // постановка или удаление лайка с карточки
   function handleCardLike(card) {
     // Проверяем, есть ли уже лайк на этой карточке
     const isLiked = card.likes.some(i => i._id === currentUser._id);
@@ -158,6 +196,7 @@ function App() {
     }
   }
 
+  // удаление карточки
   function handleCardDelete() {
     api.deleteCard(deletedCard._id)
       .then(() => {
@@ -172,6 +211,7 @@ function App() {
       });
   }
 
+  // обновление информации в профиле пользователя
   function handleUpdateUser(userData) {
     setEditSubmitTitle("Сохраняем...");
     const name = userData.name;
@@ -189,6 +229,7 @@ function App() {
       });
   }
 
+  // обновление аватара
   function handleUpdateAvatar(avatarData) {
     setAvatarSubmitTitle("Обновляем...");
     api.changeAvatar(avatarData.avatar)
@@ -204,6 +245,7 @@ function App() {
       })
   }
 
+  // добавление новой карточки
   function handleAddPlaceSubmit(cardData) {
     setAddSubmitTitle("Добавляем...");
     const place = cardData.place;
@@ -222,12 +264,14 @@ function App() {
       })
   }
 
+  // закрытие попапа при нажатии на Escape
   function handleEscClose(e) {
     if (e.key === 'Escape') {
       closeAllPopups();
     }
   }
 
+  // закрытие попапа при клике на оверлей
   function handleOverlay(e) {
     if (!e.target.closest('.popup__container')) {
       closeAllPopups();
@@ -296,7 +340,8 @@ function App() {
         <InfoTooltip
           isOpen={isInfoPopupOpen}
           onClose={closeAllPopups}
-          isSuccessReg={isSuccessReg}
+          infoTitle={infoTitle}
+          infoImg={infoImg}
           onEscClick={handleEscClose}
           onOverlayClick={handleOverlay}
         />

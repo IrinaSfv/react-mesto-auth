@@ -11,11 +11,11 @@
 
 ### Blog for travelers where you can post places you've visited, change information about yourself, and put likes.
 
-In this project, I've ported the [Mesto blog](https://github.com/IrinaSfv/mesto) to React.js.
+In this project, I've improved the [Mesto React App](https://github.com/IrinaSfv/mesto-react). I've added user registration and authorization, as well as token verification when opening the app.
 
 ## Installation
 * Run `GitBash` (or `Terminal` on MacOS);
 * Select or create a new repository where you want to put the project;
-* Run the command: `git clone https://github.com/IrinaSfv/mesto-react.git`;
+* Run the command: `git clone https://github.com/IrinaSfv/react-mesto-auth.git`;
 * Run the command: `npm install`;
 * Open the project with the command: `npm start`.

@@ -32,16 +32,13 @@ export const loginUser = (email, password) => {
         },
         body: JSON.stringify({ email, password })
     })
-        .then((res => res.json()))
+        .then((res) => checkResponse(res))
         .then((data) => {
             if (data.token) {
                 localStorage.setItem('token', data.token);
                 return data;
-            } else {
-                return;
             }
         })
-        .catch(err => console.log(`Ошибка: ${err}`))
 };
 
 // 3. Проверка валидности токена пользователя
@@ -55,5 +52,4 @@ export const getContent = (token) => {
         }
     })
         .then((res) => checkResponse(res))
-        .then(data => data);
 }
